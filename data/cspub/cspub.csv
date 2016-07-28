@@ -1,0 +1,11 @@
+新版的crawler平台，没有切换用户登录的功能，默认就是自己登陆上去了，我想退出登录，用其它用户登录抓取数据.    答：新版本的登录平台是跟百度账号绑定到一起的，无法更换账号登录。
+抓取成功了，返回200，但是页面显示结果不对.   答：可以让用户告诉url，在本地上测试。测试两个方面，换一个zk_path测试，另一方面换一个UA测试。
+抓一个wap页面的时候是不是一定要加UA.    答：不一定，根据用户需求，问用户要url，在本地测试，看是不是一定需要UA，或者是其他原因造成。
+抓取的目标是google，最近用cs client抓网页总是抓不回来，返回NULL_HTML: 16.   答：通过查阅[CRAWL_LOG],得到http的返回值，可以看出google封禁。国内的机器是抓不了google，只有香港出口的能抓google。
+提供的结构有没有post_data关键字段，但是提供给了post_data确抓取不了。    答：可以从 http://wiki.babel.baidu.com/twiki/bin/view/Com/Main/Cs_SocketAPI 查到接口确实没有关键字段。但是Post_data字段属于Method字段，就跟Ua属于http_header。下面是该用户发送数据包的格式：nshead_write: { "user": "105","user_key": "magicnum554","dest_host": "10.48.50.23","dest_port": 9292,"type":"HTML","target_url": "http:\/\/cq01-testing-wiseh100.cq01.baidu.com\/appfirst\/index.php\/Analysis\/getFirst","method": "POST","request_header": "User-Agent:Mozilla\/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko\/20100101 Firefox\/28.0\r\nContent-Type:application\/x-www-form-urlencoded\r\n","trespassing_field": {"filename": "t.html"}}cs_client添加post_data格式如下：@StringKv : type HTML</div>@StringKv : method POST@RawKv : post_data area=东城区@StringKv : request_header Content-Type: application/x-www-form-urlencoded  答：用户未添加Content-Type:application\/x-www-form-urlencoded字段导致无法抓取。用户反应登不上去，本地测试密码错误。 答：咱们线上存储的密码是明文，要得到真正的密码，可以通过./gen_key产生密文，然后跟/home/spider/cs/scheduler/conf/ user_config，里面去查密文，*grep "username" user_config*，两者对比。具体如何修改密码参考第二小节。尝试绑定账号，提供了现在正在使用的配置信息，返回账号密码错误，该提供了账号和密码信息:user_name: *user_key: *zk_server: zk.spider.baidu.com:3000 zk_path: /sandbox/cspub/cncnm/scheduler 答：该zk_path下是测试机器，所以无法绑定。
+在平台提交了100个左右的url，抓取都失败。    答：问用户提交的格式什么，可能提交文件格式错误，不是url。
+用户抓取某个站点略慢，并要求给他提速.     答：首先跟用户要相关信息，看他抓的站点一个小时抓取的速度，看是否/home/spider/cs/scheduler/conf/user_config中该用户配置信息相符，如果不符查原因。符合的话看给用户提速会不会对我们的系统造成问题。
+用户反馈抓取成功率比较低，提交50条，只能成功抓取5条左右.    答：经过检查是户重定向到非法url，解决方案在url加上nord=1这个参数可以解决此问题。
+用户反应48号账户，收不到数据，在同一台机子上用27号账号测能收到数据的。   答：通过sheduler都是抓取成功，但是在dispatcher上没有任何分发的记录，发来确定原因改用户在48号账号上同时多个下游，已超过dispatcher限制，dispatcher对一个账号下游并发有限制。
+关于目前很多用户反映zk不稳定的问题。    答:可以建议用户采用bns，cs_client新版wiki后续会更新上去。
+dispatcher分发时出现check_limit错误。   答:主要原因为mimo的5G缓存吃满。同样一个问题就是如果下游接收过慢，会出现缓存被吃满的情况，容易丢包，建议用户控制发射速率以间接控制scheduler调度速率。另外查询dispatcher是否吃满，只需去dispatcher下面的data目录则可找到用户已缓存的文件大小。
